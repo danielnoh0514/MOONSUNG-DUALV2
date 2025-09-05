@@ -1,0 +1,278 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Shapes;
+using System.Windows.Threading;
+using System.Windows.Media;
+using NAudio.Wave;
+using Python.Runtime;
+
+
+
+namespace HVT.Controls
+{
+    public partial class MicrophoneViewer : UserControl
+    {
+        public AudioTester AudioTester;
+
+        private WaveInEvent waveIn;
+        private List<float> audioSamples = new List<float>();
+        private bool isRecording = false;
+        private const int SampleRate = 44100; // 44.1kHz
+        private const int ChannelCount = 1; // Mono
+
+        // F0 Detection Parameters
+        private const int F0AnalysisWindow = 4096; // Increased window for low frequency detection
+        private const double MinFrequency = 50;    // Minimum detectable frequency (Hz)
+        private const double MaxFrequency = 10000; // Giới hạn tần số tối đa
+        private readonly Queue<float> f0Buffer = new Queue<float>(); // Smoothing buffer
+
+        public List<float> F0Saving = new List<float>();
+        public List<float> AmpSaving = new List<float>();
+
+
+        public float CurrentF0 { get; set; } = 0;
+        public float CurrentAmplitude { get; set; } = 0;
+
+        string binPath = AppContext.BaseDirectory;
+
+        public MicrophoneViewer()
+        {
+            InitializeComponent();
+            txtInfo.Text = "Ready to record";
+            AudioTester = new AudioTester(System.IO.Path.Combine(binPath, "aicore"));
+
+
+        }
+
+        private void btnRecord_Click(object sender, RoutedEventArgs e)
+        {
+            StartRecording();
+        }
+
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            StopRecording();
+        }
+
+        const float duration = 1.0f;
+        public void StartRecording()
+        {
+
+            if (isRecording) return;
+
+            AmpSaving.Clear();
+
+            try
+            {
+                waveIn = new WaveInEvent();
+                waveIn.WaveFormat = new WaveFormat(SampleRate, ChannelCount);
+                waveIn.DataAvailable += WaveIn_DataAvailable;
+                waveIn.RecordingStopped += WaveIn_RecordingStopped;
+
+                audioSamples.Clear();
+                for (int i = 0; i < SampleRate* duration; i += 1)
+                {
+                    
+                    audioSamples.Add(0);
+                }
+
+
+
+                waveformCanvas.Children.Clear();
+
+                waveIn.StartRecording();
+                isRecording = true;
+
+                btnRecord.IsEnabled = false;
+                btnStop.IsEnabled = true;
+                txtInfo.Text = "Recording...";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Recording error: {ex.Message}");
+            }
+        }
+
+        public void StopRecording()
+        {
+            if (!isRecording) return;
+
+            if (waveIn != null)
+            {
+                waveIn.StopRecording();
+                isRecording = false;
+                btnRecord.IsEnabled = true;
+                btnStop.IsEnabled = false;
+                txtInfo.Text = "Recording stopped";
+            }
+        }
+
+ 
+        private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
+        {
+            try
+            {
+                CurrentAmplitude = 0;
+                float[] currentChunk = new float[e.BytesRecorded / 2];
+
+                // Process audio samples
+                for (int i = 0; i < e.BytesRecorded; i += 2)
+                {
+                    short sample = (short)((e.Buffer[i + 1] << 8) | e.Buffer[i]);
+                    float normalizedSample = sample / 32768f; // Normalize to [-1, 1]
+                    currentChunk[i / 2] = normalizedSample;
+                    CurrentAmplitude = Math.Max(CurrentAmplitude, Math.Abs(normalizedSample));
+                    audioSamples.Add(normalizedSample);
+                    AmpSaving.Add(normalizedSample);
+                }
+
+
+
+                // Limit buffer size
+                if (audioSamples.Count > SampleRate * duration) // Keep n seconds of data
+                {
+                    audioSamples.RemoveRange(0, audioSamples.Count - (int)((float)SampleRate * duration));
+
+                }
+
+
+
+                // Update UI
+                Dispatcher.Invoke(() =>
+                {
+                    // Update amplitude display
+                    pbAmplitude.Value = CurrentAmplitude;
+                    txtCurrentAmplitude.Text = $"Amplitude: {CurrentAmplitude:F2}";
+                    txtCurrentAmplitude.Foreground = CurrentAmplitude > 0.8 ? Brushes.Red : Brushes.Black;
+
+                    // Update F0 display
+                    if (CurrentF0 > 0)
+                    {
+                        txtCurrentF0.Text = $"F0: {CurrentF0:F0} Hz";
+                        pbF0.Value = CurrentF0;
+                    }
+                    else
+                    {
+                        txtCurrentF0.Text = "F0: Not detected";
+                        pbF0.Value = 0;
+                    }
+
+                    DrawWaveform();
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Recording error: {ex.Message}");
+
+            }
+
+        }
+
+        private void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
+        {
+            if (waveIn != null)
+            {
+                waveIn.Dispose();
+                waveIn = null;
+            }
+        }
+
+        private float CalculateFundamentalFrequency(float[] samples)
+        {
+            if (samples.Length < F0AnalysisWindow) return 0;
+
+            // 1. Calculate autocorrelation
+            double[] autocorrelation = new double[F0AnalysisWindow / 2];
+            for (int lag = 0; lag < autocorrelation.Length; lag++)
+            {
+                double sum = 0;
+                for (int i = 0; i < autocorrelation.Length; i++)
+                {
+                    sum += samples[i] * samples[i + lag];
+                }
+                autocorrelation[lag] = sum;
+            }
+
+            // 2. Find significant peaks
+            int minLag = (int)(SampleRate / MaxFrequency);
+            int maxLag = (int)(SampleRate / MinFrequency);
+            maxLag = Math.Min(maxLag, autocorrelation.Length - 1);
+
+            int peakLag = FindSignificantPeak(autocorrelation, minLag, maxLag);
+
+            // 3. Calculate frequency
+            float f0 = (peakLag > 0) ? (float)SampleRate / peakLag : 0;
+            return (f0 >= MinFrequency && f0 <= MaxFrequency) ? f0 : 0;
+        }
+
+        private int FindSignificantPeak(double[] autocorrelation, int minLag, int maxLag)
+        {
+            double avg = autocorrelation.Skip(minLag).Take(maxLag - minLag).Average();
+            double threshold = avg * 1.5; // Tăng ngưỡng để loại bỏ harmonics
+
+            int peakLag = 0;
+            double maxValue = 0;
+
+            for (int lag = minLag; lag < maxLag; lag++)
+            {
+                if (autocorrelation[lag] > threshold &&
+                    autocorrelation[lag] > autocorrelation[lag - 1] &&
+                    autocorrelation[lag] > autocorrelation[lag + 1])
+                {
+                    // Chọn peak cao nhất để tránh harmonics
+                    if (autocorrelation[lag] > maxValue)
+                    {
+                        maxValue = autocorrelation[lag];
+                        peakLag = lag;
+                    }
+                }
+            }
+            return peakLag;
+        }
+
+
+
+        private void DrawWaveform()
+        {
+            if (audioSamples.Count == 0) return;
+
+            waveformCanvas.Children.Clear();
+            double canvasWidth = waveformCanvas.ActualWidth;
+            double canvasHeight = waveformCanvas.ActualHeight;
+            double middle = canvasHeight / 2;
+
+            int samplesToDisplay = Math.Min(1000, audioSamples.Count);
+            int step = audioSamples.Count / samplesToDisplay;
+
+            Polyline polyline = new Polyline
+            {
+                Stroke = Brushes.DarkGreen,
+                StrokeThickness = 1
+            };
+
+            for (int i = 0; i < samplesToDisplay; i++)
+            {
+                int index = i * step;
+                if (index >= audioSamples.Count) break;
+
+                double x = (i * canvasWidth) / samplesToDisplay;
+                double y = middle - (audioSamples[index] * middle * 0.8);
+                polyline.Points.Add(new Point(x, y));
+            }
+
+            waveformCanvas.Children.Add(polyline);
+        }
+
+        protected void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            if (isRecording)
+            {
+                StopRecording();
+            }
+        }
+    }
+}
