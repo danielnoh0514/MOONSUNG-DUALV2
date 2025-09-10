@@ -49,14 +49,7 @@
                 <TextBlock x:Name="txtCurrentAmplitude" Text="Amplitude: 0.00" MinWidth="150"/>
             </StatusBarItem>
 
-            <!-- Frequency Visualization -->
-            <Separator/>
-            <StatusBarItem>
-                <ProgressBar x:Name="pbF0" Width="100" Height="16"   Minimum="50" Maximum="10000" Value="0"/>
-            </StatusBarItem>
-            <StatusBarItem>
-                <TextBlock x:Name="txtCurrentF0" Text="F0: -- Hz" MinWidth="120"/>
-            </StatusBarItem>
+            
         </StatusBar>
     </Grid>
 </UserControl>

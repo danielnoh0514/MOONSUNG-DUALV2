@@ -149,18 +149,6 @@ namespace HVT.Controls
                     txtCurrentAmplitude.Text = $"Amplitude: {CurrentAmplitude:F2}";
                     txtCurrentAmplitude.Foreground = CurrentAmplitude > 0.8 ? Brushes.Red : Brushes.Black;
 
-                    // Update F0 display
-                    if (CurrentF0 > 0)
-                    {
-                        txtCurrentF0.Text = $"F0: {CurrentF0:F0} Hz";
-                        pbF0.Value = CurrentF0;
-                    }
-                    else
-                    {
-                        txtCurrentF0.Text = "F0: Not detected";
-                        pbF0.Value = 0;
-                    }
-
                     DrawWaveform();
                 });
             }
@@ -179,59 +167,6 @@ namespace HVT.Controls
                 waveIn.Dispose();
                 waveIn = null;
             }
-        }
-
-        private float CalculateFundamentalFrequency(float[] samples)
-        {
-            if (samples.Length < F0AnalysisWindow) return 0;
-
-            // 1. Calculate autocorrelation
-            double[] autocorrelation = new double[F0AnalysisWindow / 2];
-            for (int lag = 0; lag < autocorrelation.Length; lag++)
-            {
-                double sum = 0;
-                for (int i = 0; i < autocorrelation.Length; i++)
-                {
-                    sum += samples[i] * samples[i + lag];
-                }
-                autocorrelation[lag] = sum;
-            }
-
-            // 2. Find significant peaks
-            int minLag = (int)(SampleRate / MaxFrequency);
-            int maxLag = (int)(SampleRate / MinFrequency);
-            maxLag = Math.Min(maxLag, autocorrelation.Length - 1);
-
-            int peakLag = FindSignificantPeak(autocorrelation, minLag, maxLag);
-
-            // 3. Calculate frequency
-            float f0 = (peakLag > 0) ? (float)SampleRate / peakLag : 0;
-            return (f0 >= MinFrequency && f0 <= MaxFrequency) ? f0 : 0;
-        }
-
-        private int FindSignificantPeak(double[] autocorrelation, int minLag, int maxLag)
-        {
-            double avg = autocorrelation.Skip(minLag).Take(maxLag - minLag).Average();
-            double threshold = avg * 1.5; // Tăng ngưỡng để loại bỏ harmonics
-
-            int peakLag = 0;
-            double maxValue = 0;
-
-            for (int lag = minLag; lag < maxLag; lag++)
-            {
-                if (autocorrelation[lag] > threshold &&
-                    autocorrelation[lag] > autocorrelation[lag - 1] &&
-                    autocorrelation[lag] > autocorrelation[lag + 1])
-                {
-                    // Chọn peak cao nhất để tránh harmonics
-                    if (autocorrelation[lag] > maxValue)
-                    {
-                        maxValue = autocorrelation[lag];
-                        peakLag = lag;
-                    }
-                }
-            }
-            return peakLag;
         }
 
 
