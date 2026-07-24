@@ -636,6 +636,56 @@ namespace HVT.VTM.Base
             }
         }
 
+        // Index-based accessors (site 0..3) that map to the existing Result1..4 /
+        // ValueGet1..4 properties. They preserve the original property setters,
+        // change notifications and UI bindings, but let caller code loop over
+        // Boards instead of hand-unrolling a switch per site.
+        public void SetResult(int i, string value)
+        {
+            switch (i)
+            {
+                case 0: Result1 = value; break;
+                case 1: Result2 = value; break;
+                case 2: Result3 = value; break;
+                case 3: Result4 = value; break;
+            }
+        }
+
+        public string GetResult(int i)
+        {
+            switch (i)
+            {
+                case 0: return Result1;
+                case 1: return Result2;
+                case 2: return Result3;
+                case 3: return Result4;
+                default: return "";
+            }
+        }
+
+        public void SetValueGet(int i, string value)
+        {
+            switch (i)
+            {
+                case 0: ValueGet1 = value; break;
+                case 1: ValueGet2 = value; break;
+                case 2: ValueGet3 = value; break;
+                case 3: ValueGet4 = value; break;
+            }
+        }
+
+        public string GetValueGet(int i)
+        {
+            switch (i)
+            {
+                case 0: return ValueGet1;
+                case 1: return ValueGet2;
+                case 2: return ValueGet3;
+                case 3: return ValueGet4;
+                default: return "";
+            }
+        }
+
         public bool Skip
         {
             get { return Skipdata; }

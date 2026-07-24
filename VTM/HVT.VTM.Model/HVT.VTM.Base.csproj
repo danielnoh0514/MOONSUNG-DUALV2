@@ -251,8 +251,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helper\CheckSum.cs" />
-    <Compile Include="Helper\EnumHelper.cs" />
     <Compile Include="Model\Command\CommandDescriptions.cs" />
     <Compile Include="Model\Command\Commands.cs" />
     <Compile Include="Model\Model.cs" />

@@ -1,6 +1,7 @@
 #define IS_MASTER 1  // 1 = Master, 0 = Slave
 
 #include <Arduino.h>
+#include <AccelStepper.h>
 
 // --- Pin definitions ---
 #define MICA A0
@@ -29,6 +30,13 @@
 #define KEY2 23
 #define KEY3 24
 #define KEY4 25
+
+// --- Stepper motor (STEP/DIR driver, e.g. A4988). Both Master and Slave drive
+//     their own motor. Pins 10/12 are free on this board. ---
+#define STEP_PIN 23
+#define DIR_PIN 22
+#define STEPS_PER_REV 200
+AccelStepper stepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 
 // --- Buffers ---
 uint8_t systemRespInput[10] = { 0x44, 0x45, 0x06, 0x49, 0x00, 0xE8, 0x00, 0x00, 0x52, 0x56 };
@@ -143,6 +151,10 @@ void SetSystemIOPinMode() {
   Serial.begin(9600);   // Serial0: PC
   Serial1.begin(9600);  // Serial1: Master <-> Slave
 
+  // Stepper motor defaults (overridden at runtime by V/A sub-commands).
+  stepper.setMaxSpeed(100);      // steps/second
+  stepper.setAcceleration(500);  // steps/second^2
+
 #if !IS_MASTER
   pinMode(SDOWN, INPUT);
   pinMode(CLUP, OUTPUT);
@@ -253,6 +265,25 @@ void SetSystemOutput(uint8_t data[4]) {
   
 }
 
+// ================= STEPPER MOTOR ===================
+// Drive the stepper from a decoded sub-command + value. Sub-command letters
+// mirror the standalone stepper firmware: M/R/D/V/A/H/S/Z/?. Motion is
+// non-blocking; stepper.run() in loop() advances it toward the target.
+void HandleMotorCommand(uint8_t sub, long val) {
+  switch (sub) {
+    case 'M': stepper.moveTo(val); break;                          // absolute position (steps)
+    case 'R': stepper.move(val); break;                           // relative (+/- steps)
+    case 'D': stepper.move((long)val * STEPS_PER_REV / 360); break;  // by degrees (+/-)
+    case 'V': stepper.setMaxSpeed(val); break;                    // max speed (steps/s)
+    case 'A': stepper.setAcceleration(val); break;                // acceleration
+    case 'H': stepper.moveTo(0); break;                           // home to 0
+    case 'S': stepper.stop(); break;                              // stop (decelerate)
+    case 'Z': stepper.setCurrentPosition(0); break;              // set current pos = 0
+    case '?': break;                                              // status (no motion)
+    default: break;
+  }
+}
+
 // ================= SERIAL0 EVENT ===================
 void serialEvent() {
   uint8_t bytesData[20];
@@ -281,6 +312,16 @@ void serialEvent() {
             SetSystemOutput(bytes);
             Serial.write(systemRespOutput, 6);
           }
+          // check motor command (distinct TX opcode 0x4D):
+          //   [4] = sub-command letter (M/R/D/V/A/H/S/Z/?)
+          //   [5..7] = value, signed 24-bit big-endian
+          if (bytesData[3] == 0x4D) {
+            uint8_t sub = bytesData[4];
+            long val = ((long)bytesData[5] << 16) | ((long)bytesData[6] << 8) | (long)bytesData[7];
+            if (val & 0x800000L) val |= ~0xFFFFFFL;  // sign-extend 24-bit -> 32-bit
+            HandleMotorCommand(sub, val);
+            Serial.write(systemRespOutput, 6);
+          }
           break;
         }
         if (index == 2 && bytesData[2] == 0x49) {
@@ -306,4 +347,5 @@ void loop() {
 #if !IS_MASTER
   SlaveProcess();  // cập nhật Serial1 nếu là Slave
 #endif
+  stepper.run();  // non-blocking: advance the motor toward its target
 }

@@ -84,7 +84,8 @@ namespace HVT.VTM.Base
         SEVD,
         SEVA,
         SEV,
-        MIC
+        MIC,
+        ROT   // appended at the end so existing enum values (and saved .vmdl models) are preserved
     }
     public class CommandDescriptions : INotifyPropertyChanged
     {

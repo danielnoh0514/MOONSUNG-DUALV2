@@ -59,32 +59,17 @@ namespace HVT.VTM.Program
             BoardExtension2.SevenSegment.PinNumber = 13;
             Solenoid = new SolenoidControls();
 
-            UUTs = new List<UUTPort>(){
-                new UUTPort(){
+            UUTs = new List<UUTPort>();
+            for (int i = 1; i <= 4; i++)
+            {
+                UUTs.Add(new UUTPort()
+                {
                     serial = new SerialPortDisplay()
                     {
-                        DeviceName = "UUT 1",
+                        DeviceName = "UUT " + i,
                     }
-                },
-                new UUTPort(){
-                    serial = new SerialPortDisplay()
-                    {
-                        DeviceName = "UUT 2",
-                    }
-                },
-                new UUTPort(){
-                    serial = new SerialPortDisplay()
-                    {
-                        DeviceName = "UUT 3",
-                    }
-                },
-                new UUTPort(){
-                    serial = new SerialPortDisplay()
-                    {
-                        DeviceName = "UUT 4",
-                    }
-                }
-            };
+                });
+            }
 
             Printer = new Printer_QR();
 
@@ -123,11 +108,15 @@ namespace HVT.VTM.Program
 
             if (AppSetting.Communication.SolenoidPort.Use)
             {
+                // Dedicated Soleinoid_Atmel board -> Atmel frame layout (data in frame[4..6]).
+                Solenoid.Card.UseAtmelFrame = true;
                 Solenoid.CheckCardComunication(AppSetting.Communication.SolenoidPort.PortName);
                 await Task.Delay(100);
             }
             else
             {
+                // No solenoid board connected -> fall back to SystemDUAL (data in frame[7]).
+                Solenoid.Card.UseAtmelFrame = false;
                 Solenoid.SerialPort.Port = System.System_Board.SerialPort.Port;
             }
 

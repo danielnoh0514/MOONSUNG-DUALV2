@@ -229,8 +229,6 @@
     <Compile Include="FileAndFolder\FolderMap.cs" />
     <Compile Include="FileAndFolder\ModelLoaded.cs" />
     <Compile Include="FileAndFolder\Program.cs" />
-    <Compile Include="Helper\CheckSum.cs" />
-    <Compile Include="Helper\EnumHelper.cs" />
     <Compile Include="ModelBuilder\Program.cs" />
     <Compile Include="ModelTester\Program.cs" />
     <Compile Include="Program.cs" />

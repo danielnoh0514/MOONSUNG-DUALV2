@@ -21,7 +21,7 @@ namespace HVT.Controls
         private WaveInEvent waveIn;
         private List<float> audioSamples = new List<float>();
         private bool isRecording = false;
-        private const int SampleRate = 44100; // 44.1kHz
+        private const int SampleRate = 22050; // 44.1kHz
         private const int ChannelCount = 1; // Mono
 
         // F0 Detection Parameters
@@ -58,7 +58,7 @@ namespace HVT.Controls
             StopRecording();
         }
 
-        const float duration = 1.0f;
+        const float duration = 1.5f;
         public void StartRecording()
         {
 

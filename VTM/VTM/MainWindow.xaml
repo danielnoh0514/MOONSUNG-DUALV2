@@ -520,7 +520,7 @@
                       Background="{x:Null}"
                       FontWeight="Bold"
                       Foreground="Black"
-                      Text="Version 2.6" />
+                      Text="Version 2.7" />
 
                     <TextBlock
                     x:Name="tbDateTime"

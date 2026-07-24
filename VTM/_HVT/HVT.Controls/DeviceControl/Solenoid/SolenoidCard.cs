@@ -79,7 +79,7 @@ namespace HVT.Controls
         private void Item_ManualStateChange(object sender, EventArgs e)
         {
             (sender as SolenoidChannel).ManualStateChange -= Item_ManualStateChange;
-            bool changeOk = SendCardStatus();
+            bool changeOk = SendCardStatus2();
             (sender as SolenoidChannel).IsON = (sender as SolenoidChannel).IsON ? changeOk : !changeOk;
             (sender as SolenoidChannel).ManualStateChange += Item_ManualStateChange;
         }
@@ -116,7 +116,7 @@ namespace HVT.Controls
             {
                 item.isOn = false;
             }
-            SendCardStatus();
+            SendCardStatus2();
         }
 
 
@@ -146,6 +146,71 @@ namespace HVT.Controls
             }
 
             return SerialPort.SendToControls(cardChannel, 500, new byte[] { 0x53, 0x00 });
+        }
+
+        // Selects the data-byte order for SendCardStatus2, because the target boards read the
+        // frame differently:
+        //   true  -> dedicated Soleinoid_Atmel board: [4]=S01-08 [5]=S09-16 [6]=S17-24 [7]=reserved
+        //   false -> SystemDUAL fallback (always available): [4]=reserved [5]=S17-24 [6]=S09-16 [7]=S01-08
+        // Set by ProgramDevices from Communication.SolenoidPort.Use (dedicated port connected = Atmel).
+        public bool UseAtmelFrame { get; set; } = false;
+
+        // Builds the fixed 10-byte solenoid frame explicitly and sends it raw (already framed;
+        // no GetFrame wrapping), with DiscardInBuffer + up to 3 retries.
+        //   [0]=0x44 'D' [1]=0x45 'E' [2]=0x06 len [3]=0x53 'S' | data(4) | [8]=XOR of [0..7] [9]=0x56 'V'
+        // Data-byte order depends on UseAtmelFrame (the firmwares are NOT changed).
+        public bool SendCardStatus2()
+        {
+            byte s01_08 = 0, s09_16 = 0, s17_24 = 0;
+            foreach (var ch in Chanels)
+            {
+                if (!ch.IsON) continue;
+                int idx = (ch.Channel_P - 1) % 24; // 0..23
+                int bit = idx % 8;
+                switch (idx / 8)
+                {
+                    case 0: s01_08 |= (byte)(1 << bit); break; // S01-S08
+                    case 1: s09_16 |= (byte)(1 << bit); break; // S09-S16
+                    case 2: s17_24 |= (byte)(1 << bit); break; // S17-S24
+                }
+            }
+
+            byte[] frame = new byte[10];
+            frame[0] = 0x44; // 'D'
+            frame[1] = 0x45; // 'E'
+            frame[2] = 0x06; // payload length
+            frame[3] = 0x53; // 'S'
+            if (UseAtmelFrame)
+            {
+                // Soleinoid_Atmel: process_frame() reads output 1-8/9-16/17-24 from frame[4]/[5]/[6].
+                frame[4] = s01_08;
+                frame[5] = s09_16;
+                frame[6] = s17_24;
+                frame[7] = 0x00;     // reserved
+            }
+            else
+            {
+                // SystemDUAL fallback: KEY/outputs read from the low byte (frame[7]).
+                frame[4] = 0x00;     // reserved
+                frame[5] = s17_24;
+                frame[6] = s09_16;
+                frame[7] = s01_08;
+            }
+            byte chk = 0x00;
+            for (int i = 0; i <= 7; i++) chk ^= frame[i];
+            frame[8] = chk;
+            frame[9] = 0x56; // 'V'
+
+            if (SerialPort == null || SerialPort.Port == null || !SerialPort.Port.IsOpen)
+                return false;
+
+            for (int i = 0; i < 3; i++)
+            {
+                SerialPort.Port.DiscardInBuffer();
+                if (SerialPort.SendRawFrame(frame, 500))
+                    return true;
+            }
+            return false;
         }
     }
 }

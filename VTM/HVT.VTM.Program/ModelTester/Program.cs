@@ -247,10 +247,8 @@ namespace HVT.VTM.Program
                                 item.Skip = item.UserSkip;
                             }
                             bool BarcodeReady = true;
-                            if (Boards.Count >= 1) if (!Boards[0].Skip) BarcodeReady &= Boards[0].BarcodeReady;
-                            if (Boards.Count >= 2) if (!Boards[1].Skip) BarcodeReady &= Boards[1].BarcodeReady;
-                            if (Boards.Count >= 3) if (!Boards[2].Skip) BarcodeReady &= Boards[2].BarcodeReady;
-                            if (Boards.Count >= 4) if (!Boards[3].Skip) BarcodeReady &= Boards[3].BarcodeReady;
+                            for (int i = 0; i < Boards.Count; i++)
+                                if (!Boards[i].Skip) BarcodeReady &= Boards[i].BarcodeReady;
 
                             // Ready
                             if (BarcodeReady)
@@ -290,10 +288,8 @@ namespace HVT.VTM.Program
                             if (TestModel.BarcodeOption.UseBarcodeInput)
                             {
                                 bool BarcodeReady = true;
-                                if (Boards.Count >= 1) if (!Boards[0].Skip) BarcodeReady &= Boards[0].BarcodeReady;
-                                if (Boards.Count >= 2) if (!Boards[1].Skip) BarcodeReady &= Boards[1].BarcodeReady;
-                                if (Boards.Count >= 3) if (!Boards[2].Skip) BarcodeReady &= Boards[2].BarcodeReady;
-                                if (Boards.Count >= 4) if (!Boards[3].Skip) BarcodeReady &= Boards[3].BarcodeReady;
+                                for (int i = 0; i < Boards.Count; i++)
+                                    if (!Boards[i].Skip) BarcodeReady &= Boards[i].BarcodeReady;
 
                                 if (BarcodeReady)
                                 {
@@ -349,10 +345,8 @@ namespace HVT.VTM.Program
                         IsTestting = true;
                         StepTesting = 0;
                         var Steps = TestModel.Steps;
-                        if (Boards.Count >= 1) if (!Boards[0].Skip) Boards[0].StartTest = DateTime.Now;
-                        if (Boards.Count >= 2) if (!Boards[1].Skip) Boards[1].StartTest = DateTime.Now;
-                        if (Boards.Count >= 3) if (!Boards[2].Skip) Boards[2].StartTest = DateTime.Now;
-                        if (Boards.Count >= 4) if (!Boards[3].Skip) Boards[3].StartTest = DateTime.Now;
+                        for (int i = 0; i < Boards.Count; i++)
+                            if (!Boards[i].Skip) Boards[i].StartTest = DateTime.Now;
 
                         //Discharge
                         if (TestModel.Discharge.CheckBeforeTest || AppSetting.ETCSetting.UseDischargeTestStart)
@@ -370,10 +364,8 @@ namespace HVT.VTM.Program
                             if (StepTesting >= Steps.Count)
                             {
                                 bool TestOK = true;
-                                if (Boards.Count >= 1) { Boards[0].Result = Boards[0].UserSkip ? "SKIP" : Steps.Select(x => x.Result1).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                if (Boards.Count >= 2) { Boards[1].Result = Boards[1].UserSkip ? "SKIP" : Steps.Select(x => x.Result2).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                if (Boards.Count >= 3) { Boards[2].Result = Boards[2].UserSkip ? "SKIP" : Steps.Select(x => x.Result3).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                if (Boards.Count >= 4) { Boards[3].Result = Boards[3].UserSkip ? "SKIP" : Steps.Select(x => x.Result4).Contains(Step.Ng) ? "FAIL" : "OK"; }
+                                for (int i = 0; i < Boards.Count; i++)
+                                    Boards[i].Result = Boards[i].UserSkip ? "SKIP" : Steps.Select(x => x.GetResult(i)).Contains(Step.Ng) ? "FAIL" : "OK";
 
                                 foreach (var item in Boards)
                                 {
@@ -457,17 +449,13 @@ namespace HVT.VTM.Program
                                         //Skip fail Step
                                         if (AppSetting.Operations.FailStopPCB && !IsPass)
                                         {
-                                            if (Boards.Count >= 1) { Boards[0].Result = Boards[0].Skip ? "SKIP" : Steps.Select(x => x.Result1).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 2) { Boards[1].Result = Boards[1].Skip ? "SKIP" : Steps.Select(x => x.Result2).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 3) { Boards[2].Result = Boards[2].Skip ? "SKIP" : Steps.Select(x => x.Result3).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 4) { Boards[3].Result = Boards[3].Skip ? "SKIP" : Steps.Select(x => x.Result4).Contains(Step.Ng) ? "FAIL" : "OK"; }
+                                            for (int i = 0; i < Boards.Count; i++)
+                                                Boards[i].Result = Boards[i].Skip ? "SKIP" : Steps.Select(x => x.GetResult(i)).Contains(Step.Ng) ? "FAIL" : "OK";
 
                                             bool TestOK = true;
 
-                                            if (Boards.Count >= 1) { Boards[0].Result = Boards[0].UserSkip ? "SKIP" : Steps.Select(x => x.Result1).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 2) { Boards[1].Result = Boards[1].UserSkip ? "SKIP" : Steps.Select(x => x.Result2).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 3) { Boards[2].Result = Boards[2].UserSkip ? "SKIP" : Steps.Select(x => x.Result3).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 4) { Boards[3].Result = Boards[3].UserSkip ? "SKIP" : Steps.Select(x => x.Result4).Contains(Step.Ng) ? "FAIL" : "OK"; }
+                                            for (int i = 0; i < Boards.Count; i++)
+                                                Boards[i].Result = Boards[i].UserSkip ? "SKIP" : Steps.Select(x => x.GetResult(i)).Contains(Step.Ng) ? "FAIL" : "OK";
 
                                             TestOK = Boards.Select(x => x.Result).Contains("OK");
                                             if (!TestOK)
@@ -492,16 +480,12 @@ namespace HVT.VTM.Program
                                             }
                                             else
                                             {
-                                                if (Boards.Count >= 1) if (!Boards[0].Skip) Boards[0].Skip = Boards[0].Result == "FAIL";
-                                                if (Boards.Count >= 2) if (!Boards[1].Skip) Boards[1].Skip = Boards[1].Result == "FAIL";
-                                                if (Boards.Count >= 3) if (!Boards[2].Skip) Boards[2].Skip = Boards[2].Result == "FAIL";
-                                                if (Boards.Count >= 4) if (!Boards[3].Skip) Boards[3].Skip = Boards[3].Result == "FAIL";
+                                                for (int i = 0; i < Boards.Count; i++)
+                                                    if (!Boards[i].Skip) Boards[i].Skip = Boards[i].Result == "FAIL";
 
                                                 Debug.Write("Step test fail -> Skip sites:", Debug.ContentType.Warning);
-                                                if (Boards.Count >= 1) if (Boards[0].Skip) Debug.Appent("\t\tSite A", Debug.ContentType.Warning);
-                                                if (Boards.Count >= 2) if (Boards[1].Skip) Debug.Appent("\t\tSite B", Debug.ContentType.Warning);
-                                                if (Boards.Count >= 3) if (Boards[2].Skip) Debug.Appent("\t\tSite C", Debug.ContentType.Warning);
-                                                if (Boards.Count >= 4) if (Boards[3].Skip) Debug.Appent("\t\tSite D", Debug.ContentType.Warning);
+                                                for (int i = 0; i < Boards.Count; i++)
+                                                    if (Boards[i].Skip) Debug.Appent("\t\tSite " + (char)('A' + i), Debug.ContentType.Warning);
                                             }
                                         }
                                     }
@@ -509,10 +493,8 @@ namespace HVT.VTM.Program
                                     if (stepTest.cmd == CMDs.END)
                                     {
                                         bool TestOK = true;
-                                        if (Boards.Count >= 1) { Boards[0].Result = Boards[0].UserSkip ? "SKIP" : Steps.Select(x => x.Result1).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                        if (Boards.Count >= 2) { Boards[1].Result = Boards[1].UserSkip ? "SKIP" : Steps.Select(x => x.Result2).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                        if (Boards.Count >= 3) { Boards[2].Result = Boards[2].UserSkip ? "SKIP" : Steps.Select(x => x.Result3).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                        if (Boards.Count >= 4) { Boards[3].Result = Boards[3].UserSkip ? "SKIP" : Steps.Select(x => x.Result4).Contains(Step.Ng) ? "FAIL" : "OK"; }
+                                        for (int i = 0; i < Boards.Count; i++)
+                                            Boards[i].Result = Boards[i].UserSkip ? "SKIP" : Steps.Select(x => x.GetResult(i)).Contains(Step.Ng) ? "FAIL" : "OK";
 
                                         foreach (var item in Boards)
                                         {
@@ -535,10 +517,8 @@ namespace HVT.VTM.Program
 
                                     if (stepTest.cmd == CMDs.UCN)
                                     {
-                                        if (Boards.Count >= 1) if (!Boards[0].Skip && CommandDescriptions.CommandRemark_Version.Contains(stepTest.Remark)) Boards[0].BoardDetail += stepTest.Remark + ": " + stepTest.ValueGet1 + " ";
-                                        if (Boards.Count >= 2) if (!Boards[1].Skip && CommandDescriptions.CommandRemark_Version.Contains(stepTest.Remark)) Boards[1].BoardDetail += stepTest.Remark + ": " + stepTest.ValueGet2 + " ";
-                                        if (Boards.Count >= 3) if (!Boards[2].Skip && CommandDescriptions.CommandRemark_Version.Contains(stepTest.Remark)) Boards[2].BoardDetail += stepTest.Remark + ": " + stepTest.ValueGet3 + " ";
-                                        if (Boards.Count >= 4) if (!Boards[3].Skip && CommandDescriptions.CommandRemark_Version.Contains(stepTest.Remark)) Boards[3].BoardDetail += stepTest.Remark + ": " + stepTest.ValueGet4 + " ";
+                                        for (int i = 0; i < Boards.Count; i++)
+                                            if (!Boards[i].Skip && CommandDescriptions.CommandRemark_Version.Contains(stepTest.Remark)) Boards[i].BoardDetail += stepTest.Remark + ": " + stepTest.GetValueGet(i) + " ";
                                     }
 
                                     await Task.Delay(10); // delay for data binding
@@ -647,20 +627,14 @@ namespace HVT.VTM.Program
                                         //Skip fail Step
                                         if (AppSetting.Operations.FailStopPCB && !IsPass)
                                         {
-                                            if (Boards.Count >= 1) { Boards[0].Result = Boards[0].Skip ? "SKIP" : Steps.Select(x => x.Result1).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 2) { Boards[1].Result = Boards[1].Skip ? "SKIP" : Steps.Select(x => x.Result2).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 3) { Boards[2].Result = Boards[2].Skip ? "SKIP" : Steps.Select(x => x.Result3).Contains(Step.Ng) ? "FAIL" : "OK"; }
-                                            if (Boards.Count >= 4) { Boards[3].Result = Boards[3].Skip ? "SKIP" : Steps.Select(x => x.Result4).Contains(Step.Ng) ? "FAIL" : "OK"; }
+                                            for (int i = 0; i < Boards.Count; i++)
+                                                Boards[i].Result = Boards[i].Skip ? "SKIP" : Steps.Select(x => x.GetResult(i)).Contains(Step.Ng) ? "FAIL" : "OK";
 
-                                            if (Boards.Count >= 1) if (!Boards[0].Skip) Boards[0].Skip = Boards[0].Result != "OK";
-                                            if (Boards.Count >= 2) if (!Boards[1].Skip) Boards[1].Skip = Boards[1].Result != "OK";
-                                            if (Boards.Count >= 3) if (!Boards[2].Skip) Boards[2].Skip = Boards[2].Result != "OK";
-                                            if (Boards.Count >= 4) if (!Boards[3].Skip) Boards[3].Skip = Boards[3].Result != "OK";
+                                            for (int i = 0; i < Boards.Count; i++)
+                                                if (!Boards[i].Skip) Boards[i].Skip = Boards[i].Result != "OK";
                                             Debug.Write("Step test fail -> Skip sites:", Debug.ContentType.Warning);
-                                            if (Boards.Count >= 1) if (Boards[0].Skip) Debug.Appent("\t\tSite A", Debug.ContentType.Warning);
-                                            if (Boards.Count >= 2) if (Boards[1].Skip) Debug.Appent("\t\tSite B", Debug.ContentType.Warning);
-                                            if (Boards.Count >= 3) if (Boards[2].Skip) Debug.Appent("\t\tSite C", Debug.ContentType.Warning);
-                                            if (Boards.Count >= 4) if (Boards[3].Skip) Debug.Appent("\t\tSite D", Debug.ContentType.Warning);
+                                            for (int i = 0; i < Boards.Count; i++)
+                                                if (Boards[i].Skip) Debug.Appent("\t\tSite " + (char)('A' + i), Debug.ContentType.Warning);
                                         }
 
                                         if (!IsTestting)
@@ -1284,6 +1258,10 @@ namespace HVT.VTM.Program
                         MOT(step);
                         break;
 
+                    case CMDs.ROT:
+                        ROT(step);
+                        break;
+
                     default:
                         break;
                 }
@@ -1335,10 +1313,8 @@ namespace HVT.VTM.Program
             }
             else
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = "exe";
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = "exe";
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = "exe";
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = "exe";
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, "exe");
             }
         }
 
@@ -1381,7 +1357,7 @@ namespace HVT.VTM.Program
                 }
                 if (Boards.Count >= 2)
                 {
-                    step.ValueGet1 = "exe";
+                    step.ValueGet2 = "exe";
                     step.Result2 = Step.Ok;
                 }
             }
@@ -1530,7 +1506,7 @@ namespace HVT.VTM.Program
         }
         public bool CheckSound()
         {
-            return PredictWithSlidingWindow(MicrophoneViewer.AmpSaving);
+            return PredictWithSlidingWindow(MicrophoneViewer.AmpSaving, (int)(22050 * 1.5));
         }
 
 
@@ -1554,7 +1530,7 @@ namespace HVT.VTM.Program
                 }
                 if (Boards.Count >= 2)
                 {
-                    step.ValueGet1 = "exe";
+                    step.ValueGet2 = "exe";
                     step.Result2 = Step.Ok;
                 }
             }
@@ -1569,7 +1545,7 @@ namespace HVT.VTM.Program
                 }
                 if (Boards.Count >= 2)
                 {
-                    step.ValueGet1 = "exe";
+                    step.ValueGet2 = "exe";
                     step.Result2 = Step.Ok;
                 }
             }
@@ -1594,75 +1570,13 @@ namespace HVT.VTM.Program
         {
             if (!BoardExtension1.SerialPort.Port.IsOpen)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Sys";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Sys");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
                 return;
             }
@@ -2128,10 +2042,8 @@ namespace HVT.VTM.Program
                 case "SEND-R":
                     var listTask1 = new List<Task<bool>>();
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[0], 1, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[1], 2, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[2], 3, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[3], 4, txData, delay, limittime, tryCount));
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[i], i + 1, txData, delay, limittime, tryCount));
 
                     try
                     {
@@ -2154,10 +2066,8 @@ namespace HVT.VTM.Program
                 case "SEND_R":
                     var listTask2 = new List<Task<bool>>();
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[0], 1, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[1], 2, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[2], 3, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[3], 4, txData, delay, limittime, tryCount));
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[i], i + 1, txData, delay, limittime, tryCount));
 
                     try
                     {
@@ -2223,10 +2133,8 @@ namespace HVT.VTM.Program
                 case "SEND-R":
                     var listTask1 = new List<Task<bool>>();
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[0], 1, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[1], 2, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[2], 3, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[3], 4, txData, delay, limittime, tryCount));
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) listTask1.Add(UTN_SEND_R(step, UUTs[i], i + 1, txData, delay, limittime, tryCount));
 
                     try
                     {
@@ -2249,10 +2157,8 @@ namespace HVT.VTM.Program
                 case "SEND_R":
                     var listTask2 = new List<Task<bool>>();
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[0], 1, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[1], 2, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[2], 3, txData, delay, limittime, tryCount));
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[3], 4, txData, delay, limittime, tryCount));
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) listTask2.Add(UTN_SEND_R(step, UUTs[i], i + 1, txData, delay, limittime, tryCount));
 
                     try
                     {
@@ -2283,45 +2189,33 @@ namespace HVT.VTM.Program
 
         private void UTN_NORMAL(Step step, TxData txData)
         {
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = UUTs[0].Send(txData) ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = UUTs[1].Send(txData) ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = UUTs[2].Send(txData) ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = UUTs[3].Send(txData) ? Step.Ok : Step.Ng;
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.SetResult(i, UUTs[i].Send(txData) ? Step.Ok : Step.Ng);
 
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = step.Result1 == Step.Ok ? Step.Ok : "Tx";
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = step.Result2 == Step.Ok ? Step.Ok : "Tx";
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = step.Result3 == Step.Ok ? Step.Ok : "Tx";
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = step.Result4 == Step.Ok ? Step.Ok : "Tx";
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.SetValueGet(i, step.GetResult(i) == Step.Ok ? Step.Ok : "Tx");
         }
 
         private void UTN_NORMAL(Step step, string txData)
         {
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = UUTs[0].Send(txData) ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = UUTs[1].Send(txData) ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = UUTs[2].Send(txData) ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = UUTs[3].Send(txData) ? Step.Ok : Step.Ng;
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.SetResult(i, UUTs[i].Send(txData) ? Step.Ok : Step.Ng);
 
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = step.Result1 == Step.Ok ? Step.Ok : "Tx";
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = step.Result2 == Step.Ok ? Step.Ok : "Tx";
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = step.Result3 == Step.Ok ? Step.Ok : "Tx";
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = step.Result4 == Step.Ok ? Step.Ok : "Tx";
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.SetValueGet(i, step.GetResult(i) == Step.Ok ? Step.Ok : "Tx");
         }
 
         private void UTN_SendTimer(Step step, TxData txData)
         {
             if (int.TryParse(step.Count, out int time))
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = UUTs[0].SendTimer(txData, time) ? Step.Ok : "Sys";
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = UUTs[1].SendTimer(txData, time) ? Step.Ok : "Sys";
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = UUTs[2].SendTimer(txData, time) ? Step.Ok : "Sys";
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = UUTs[3].SendTimer(txData, time) ? Step.Ok : "Sys";
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, UUTs[i].SendTimer(txData, time) ? Step.Ok : "Sys");
             }
             else
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = "Set time";
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = "Set time";
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = "Set time";
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = "Set time";
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, "Set time");
             }
         }
 
@@ -2329,17 +2223,13 @@ namespace HVT.VTM.Program
         {
             if (int.TryParse(step.Count, out int time))
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = UUTs[0].SendTimer(txData, time) ? Step.Ok : "Sys";
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = UUTs[1].SendTimer(txData, time) ? Step.Ok : "Sys";
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = UUTs[2].SendTimer(txData, time) ? Step.Ok : "Sys";
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = UUTs[3].SendTimer(txData, time) ? Step.Ok : "Sys";
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, UUTs[i].SendTimer(txData, time) ? Step.Ok : "Sys");
             }
             else
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = "Set time";
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = "Set time";
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = "Set time";
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = "Set time";
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, "Set time");
             }
         }
 
@@ -2502,22 +2392,16 @@ namespace HVT.VTM.Program
 
             if (rxData != null)
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = UUTs[0].CheckBufferString(rxData);
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = UUTs[1].CheckBufferString(rxData);
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = UUTs[2].CheckBufferString(rxData);
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = UUTs[3].CheckBufferString(rxData);
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, UUTs[i].CheckBufferString(rxData));
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Spect ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Spect ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Spect ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Spect ? Step.Ok : Step.Ng;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Spect ? Step.Ok : Step.Ng);
             }
             else
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = Step.Ng;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = Step.Ng;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = Step.Ng;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = Step.Ng;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetResult(i, Step.Ng);
             }
         }
 
@@ -2562,26 +2446,22 @@ namespace HVT.VTM.Program
                                     VisionTester.Models.LCDs[0].DetectedString) : step.ValueGet1;
 
                     if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = step.Result2 != Step.Ok ?
-                                    (VisionTester.Models.LCDs[0].DetectedString.Replace("B", "8") == step.Oper.Replace("B", "8") ? step.Oper :
+                                    (VisionTester.Models.LCDs[1].DetectedString.Replace("B", "8") == step.Oper.Replace("B", "8") ? step.Oper :
                                     VisionTester.Models.LCDs[1].DetectedString) : step.ValueGet2;
 
                     if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = step.Result3 != Step.Ok ?
-                                    (VisionTester.Models.LCDs[0].DetectedString.Replace("B", "8") == step.Oper.Replace("B", "8") ? step.Oper :
+                                    (VisionTester.Models.LCDs[2].DetectedString.Replace("B", "8") == step.Oper.Replace("B", "8") ? step.Oper :
                                     VisionTester.Models.LCDs[2].DetectedString) : step.ValueGet3;
 
                     if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = step.Result4 != Step.Ok ?
-                                    (VisionTester.Models.LCDs[0].DetectedString.Replace("B", "8") == step.Oper.Replace("B", "8") ? step.Oper :
+                                    (VisionTester.Models.LCDs[3].DetectedString.Replace("B", "8") == step.Oper.Replace("B", "8") ? step.Oper :
                                     VisionTester.Models.LCDs[3].DetectedString) : step.ValueGet4;
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
 
                     if (step.Result)
                         break;
@@ -2590,20 +2470,14 @@ namespace HVT.VTM.Program
             }
             else
             {
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = VisionTester.Models.LCDs[0].DetectedString;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = VisionTester.Models.LCDs[1].DetectedString;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = VisionTester.Models.LCDs[2].DetectedString;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = VisionTester.Models.LCDs[3].DetectedString;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, VisionTester.Models.LCDs[i].DetectedString);
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
             }
         }
 
@@ -2777,18 +2651,14 @@ namespace HVT.VTM.Program
                     }
                     else
                     {
-                        if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-                        if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-                        if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-                        if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+                        for (int i = 0; i < Boards.Count; i++)
+                            if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
 
                     }
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
                     if (step.Result)
                         break;
 
@@ -2817,15 +2687,11 @@ namespace HVT.VTM.Program
                 if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = DetectedString_Board2;
                 if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = DetectedString_Board3;
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
             }
         }
 
@@ -2838,20 +2704,14 @@ namespace HVT.VTM.Program
                 while (DateTime.Now.Subtract(start).TotalMilliseconds < scanTime)
                 {
                     step.Result = true;
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = VisionTester.Models.LED[0].CalculatorOutputString;
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = VisionTester.Models.LED[1].CalculatorOutputString;
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = VisionTester.Models.LED[2].CalculatorOutputString;
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = VisionTester.Models.LED[3].CalculatorOutputString;
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) step.SetValueGet(i, VisionTester.Models.LED[i].CalculatorOutputString);
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
-                    if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-                    if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-                    if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-                    if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+                    for (int i = 0; i < Boards.Count; i++)
+                        if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
 
                     if (step.Result)
                         break;
@@ -2861,39 +2721,27 @@ namespace HVT.VTM.Program
             else
             {
                 step.Result = true;
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = VisionTester.Models.LED[0].CalculatorOutputString;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = VisionTester.Models.LED[1].CalculatorOutputString;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = VisionTester.Models.LED[2].CalculatorOutputString;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = VisionTester.Models.LED[3].CalculatorOutputString;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, VisionTester.Models.LED[i].CalculatorOutputString);
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
             }
         }
 
         public void ReadGLED(Step step)
         {
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = VisionTester.Models.GLED[0].CalculatorOutputString;
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = VisionTester.Models.GLED[1].CalculatorOutputString;
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = VisionTester.Models.GLED[2].CalculatorOutputString;
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = VisionTester.Models.GLED[3].CalculatorOutputString;
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.SetValueGet(i, VisionTester.Models.GLED[i].CalculatorOutputString);
 
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result1 = step.ValueGet1 == step.Oper ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result2 = step.ValueGet2 == step.Oper ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result3 = step.ValueGet3 == step.Oper ? Step.Ok : Step.Ng;
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result4 = step.ValueGet4 == step.Oper ? Step.Ok : Step.Ng;
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.SetResult(i, step.GetValueGet(i) == step.Oper ? Step.Ok : Step.Ng);
 
-            if (Boards.Count >= 1) if (!Boards[0].Skip) step.Result &= (step.Result1 == Step.Ok);
-            if (Boards.Count >= 2) if (!Boards[1].Skip) step.Result &= (step.Result2 == Step.Ok);
-            if (Boards.Count >= 3) if (!Boards[2].Skip) step.Result &= (step.Result3 == Step.Ok);
-            if (Boards.Count >= 4) if (!Boards[3].Skip) step.Result &= (step.Result4 == Step.Ok);
+            for (int i = 0; i < Boards.Count; i++)
+                if (!Boards[i].Skip) step.Result &= (step.GetResult(i) == Step.Ok);
         }
 
         public void RLY_SYSTEM_BOARD(Step step)
@@ -2973,155 +2821,21 @@ namespace HVT.VTM.Program
             }
 
             bool SetOK = Relay.SetChannels(numberChannel, step.Oper == "ON");
-            switch (Boards.Count)
+            for (int i = 0; i < Boards.Count; i++)
             {
-                case 1:
-                    if (!Boards[0].Skip)
+                if (!Boards[i].Skip)
+                {
+                    if (!SetOK)
                     {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "exe";
-                            step.Result1 = Step.Ok;
-                        }
+                        step.SetValueGet(i, "Sys");
+                        step.SetResult(i, Step.Ng);
                     }
-                    break;
-
-                case 2:
-                    if (!Boards[0].Skip)
+                    else
                     {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "exe";
-                            step.Result1 = Step.Ok;
-                        }
+                        step.SetValueGet(i, "exe");
+                        step.SetResult(i, Step.Ok);
                     }
-
-                    if (!Boards[1].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet2 = "exe";
-                            step.Result2 = Step.Ok;
-                        }
-                    }
-                    break;
-
-                case 3:
-                    if (!Boards[0].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "exe";
-                            step.Result1 = Step.Ok;
-                        }
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet2 = "exe";
-                            step.Result2 = Step.Ok;
-                        }
-                    }
-                    if (!Boards[2].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet3 = "exe";
-                            step.Result3 = Step.Ok;
-                        }
-                    }
-                    break;
-
-                case 4:
-                    if (!Boards[0].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "exe";
-                            step.Result1 = Step.Ok;
-                        }
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet2 = "exe";
-                            step.Result2 = Step.Ok;
-                        }
-                    }
-                    if (!Boards[2].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet3 = "exe";
-                            step.Result3 = Step.Ok;
-                        }
-                    }
-                    if (!Boards[3].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet4 = "Sys";
-                            step.Result4 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet4 = "exe";
-                            step.Result4 = Step.Ok;
-                        }
-                    }
-                    break;
-
-                default:
-                    break;
+                }
             }
             if (Int32.TryParse(step.Condition2, out int pressDelayTime))
             {
@@ -3192,155 +2906,21 @@ namespace HVT.VTM.Program
                 }
             }
             bool SetOK = Solenoid.SetChannels(numberChannel, step.Oper == "ON");
-            switch (Boards.Count)
+            for (int i = 0; i < Boards.Count; i++)
             {
-                case 1:
-                    if (!Boards[0].Skip)
+                if (!Boards[i].Skip)
+                {
+                    if (!SetOK)
                     {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "ON";
-                            step.Result1 = Step.Ok;
-                        }
+                        step.SetValueGet(i, "Sys");
+                        step.SetResult(i, Step.Ng);
                     }
-                    break;
-
-                case 2:
-                    if (!Boards[0].Skip)
+                    else
                     {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "ON";
-                            step.Result1 = Step.Ok;
-                        }
+                        step.SetValueGet(i, "ON");
+                        step.SetResult(i, Step.Ok);
                     }
-
-                    if (!Boards[1].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet2 = "ON";
-                            step.Result2 = Step.Ok;
-                        }
-                    }
-                    break;
-
-                case 3:
-                    if (!Boards[0].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "ON";
-                            step.Result1 = Step.Ok;
-                        }
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet2 = "ON";
-                            step.Result2 = Step.Ok;
-                        }
-                    }
-                    if (!Boards[2].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet3 = "ON";
-                            step.Result3 = Step.Ok;
-                        }
-                    }
-                    break;
-
-                case 4:
-                    if (!Boards[0].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet1 = "ON";
-                            step.Result1 = Step.Ok;
-                        }
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet2 = "ON";
-                            step.Result2 = Step.Ok;
-                        }
-                    }
-                    if (!Boards[2].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet3 = "ON";
-                            step.Result3 = Step.Ok;
-                        }
-                    }
-                    if (!Boards[3].Skip)
-                    {
-                        if (!SetOK)
-                        {
-                            step.ValueGet4 = "Sys";
-                            step.Result4 = Step.Ng;
-                        }
-                        else
-                        {
-                            step.ValueGet4 = "ON";
-                            step.Result4 = Step.Ok;
-                        }
-                    }
-                    break;
-
-                default:
-                    break;
+                }
             }
             if (Int32.TryParse(step.Condition2, out int pressDelayTime))
             {
@@ -3371,75 +2951,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Oper";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Oper";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Oper";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Oper");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3451,75 +2969,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Condition";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Condition");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3574,75 +3030,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Oper";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Oper";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Oper";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Oper");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3655,75 +3049,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Condition";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Condition");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3745,75 +3077,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Oper";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Oper";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Oper";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Oper";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Oper";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Oper");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3825,75 +3095,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Condition";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Condition");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3914,75 +3122,13 @@ namespace HVT.VTM.Program
             }
             catch (Exception)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Condition";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Condition";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Condition";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Condition";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Condition");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
 
                 return;
@@ -3997,75 +3143,13 @@ namespace HVT.VTM.Program
         {
             if (!_DMM.DMM1.SerialPort.Port.IsOpen & !_DMM.DMM2.SerialPort.Port.IsOpen)
             {
-                switch (Boards.Count)
+                for (int i = 0; i < Boards.Count; i++)
                 {
-                    case 1:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-                        break;
-
-                    case 2:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        break;
-
-                    case 3:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        break;
-
-                    case 4:
-                        if (!Boards[0].Skip)
-                        {
-                            step.ValueGet1 = "Sys";
-                            step.Result1 = Step.Ng;
-                        }
-
-                        if (!Boards[1].Skip)
-                        {
-                            step.ValueGet2 = "Sys";
-                            step.Result2 = Step.Ng;
-                        }
-                        if (!Boards[2].Skip)
-                        {
-                            step.ValueGet3 = "Sys";
-                            step.Result3 = Step.Ng;
-                        }
-                        if (!Boards[3].Skip)
-                        {
-                            step.ValueGet4 = "Sys";
-                            step.Result4 = Step.Ng;
-                        }
-                        break;
-
-                    default:
-                        break;
+                    if (!Boards[i].Skip)
+                    {
+                        step.SetValueGet(i, "Sys");
+                        step.SetResult(i, Step.Ng);
+                    }
                 }
                 return;
             }
@@ -6819,7 +5903,7 @@ namespace HVT.VTM.Program
                         step.Result3 = Step.Ok;
                     }
 
-                    if (!Boards[4].Skip)
+                    if (!Boards[3].Skip)
                     {
                         if (Is110V)
                             System.System_Board.MachineIO.BC110 = IsON;
@@ -6853,15 +5937,75 @@ namespace HVT.VTM.Program
                 }
 
                 System.System_Board.SendControl();
-                if (Boards.Count >= 1) if (!Boards[0].Skip) step.ValueGet1 = "exe";
-                if (Boards.Count >= 2) if (!Boards[1].Skip) step.ValueGet2 = "exe";
-                if (Boards.Count >= 3) if (!Boards[2].Skip) step.ValueGet3 = "exe";
-                if (Boards.Count >= 4) if (!Boards[3].Skip) step.ValueGet4 = "exe";
+                for (int i = 0; i < Boards.Count; i++)
+                    if (!Boards[i].Skip) step.SetValueGet(i, "exe");
             }
             else
             {
                 FunctionsParameterError("sys", step);
             }
+        }
+
+        // ROT: control a stepper motor driven directly by the System board (SystemDUAL)
+        // firmware. Condition1 = sub command, Oper = numeric value.
+        //
+        // A distinct TX frame carries the command (opcode 0x4D), so it never collides
+        // with the system I/O protocol (whose 'D' sub-command == frame prefix 0x44):
+        //   0x44 0x45 | size=6 | 0x4D | <sub letter> | <value: signed 24-bit big-endian> | XOR | 0x56
+        // Sub letters mirror the firmware: M/R/D/V/A/H/S/Z/?. HOME/STOP/ZERO/STATUS ignore the value.
+        public void ROT(Step step)
+        {
+            if (!System.System_Board.SerialPort.Port.IsOpen)
+            {
+                FunctionsParameterError("Sys", step);
+                return;
+            }
+
+            string sub = (step.Condition1 ?? "").Trim().ToUpperInvariant();
+            byte letter;
+            bool needValue = true;
+
+            switch (sub)
+            {
+                case "MOVE":   letter = (byte)'M'; break;   // move to absolute position (steps)
+                case "ROTATE": letter = (byte)'R'; break;   // rotate relative (+/- steps)
+                case "DEGREE": letter = (byte)'D'; break;   // rotate by degrees (+/-)
+                case "SPEED":  letter = (byte)'V'; break;   // set max speed (steps/s)
+                case "ACCEL":  letter = (byte)'A'; break;   // set acceleration
+                case "HOME":   letter = (byte)'H'; needValue = false; break;   // home to 0
+                case "STOP":   letter = (byte)'S'; needValue = false; break;   // stop
+                case "ZERO":   letter = (byte)'Z'; needValue = false; break;   // set current pos = 0
+                case "STATUS": letter = (byte)'?'; needValue = false; break;   // query status
+                default:
+                    FunctionsParameterError("Condition1", step);
+                    return;
+            }
+
+            long value = 0;
+            if (needValue)
+            {
+                if (!long.TryParse((step.Oper ?? "").Trim(), out value))
+                {
+                    FunctionsParameterError("Oper", step);
+                    return;
+                }
+            }
+
+            // Pack the value as a signed 24-bit big-endian integer (range ±8,388,607).
+            int v = (int)value;
+            byte[] payload = new byte[]
+            {
+                0x4D,                        // motor opcode (distinct TX)
+                letter,                      // sub-command letter
+                (byte)((v >> 16) & 0xFF),
+                (byte)((v >> 8) & 0xFF),
+                (byte)(v & 0xFF),
+            };
+
+            System.System_Board.SerialPort.SendBytes(SystemComunication.GetFrame(payload));
+
+            step.ValueGet1 = ((char)letter).ToString() + (needValue ? value.ToString() : "");
+            step.Result1 = Step.Ok;
         }
 
         public void MOT(Step step)
@@ -7406,75 +6550,14 @@ namespace HVT.VTM.Program
 
         private void FunctionsParameterError(string nameOfFunc, Step step)
         {
-            switch (Boards.Count)
+            if (Boards.Count < 1 || Boards.Count > 4) return;
+            for (int i = 0; i < Boards.Count; i++)
             {
-                case 1:
-                    if (!Boards[0].Skip)
-                    {
-                        step.ValueGet1 = nameOfFunc;
-                        step.Result1 = Step.Ng;
-                    }
-                    break;
-
-                case 2:
-                    if (!Boards[0].Skip)
-                    {
-                        step.ValueGet1 = nameOfFunc;
-                        step.Result1 = Step.Ng;
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        step.ValueGet2 = nameOfFunc;
-                        step.Result2 = Step.Ng;
-                    }
-                    break;
-
-                case 3:
-                    if (!Boards[0].Skip)
-                    {
-                        step.ValueGet1 = nameOfFunc;
-                        step.Result1 = Step.Ng;
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        step.ValueGet2 = nameOfFunc;
-                        step.Result2 = Step.Ng;
-                    }
-                    if (!Boards[2].Skip)
-                    {
-                        step.ValueGet3 = nameOfFunc;
-                        step.Result3 = Step.Ng;
-                    }
-                    break;
-
-                case 4:
-                    if (!Boards[0].Skip)
-                    {
-                        step.ValueGet1 = nameOfFunc;
-                        step.Result1 = Step.Ng;
-                    }
-
-                    if (!Boards[1].Skip)
-                    {
-                        step.ValueGet2 = nameOfFunc;
-                        step.Result2 = Step.Ng;
-                    }
-                    if (!Boards[2].Skip)
-                    {
-                        step.ValueGet3 = nameOfFunc;
-                        step.Result3 = Step.Ng;
-                    }
-                    if (!Boards[3].Skip)
-                    {
-                        step.ValueGet4 = nameOfFunc;
-                        step.Result4 = Step.Ng;
-                    }
-                    break;
-
-                default:
-                    break;
+                if (!Boards[i].Skip)
+                {
+                    step.SetValueGet(i, nameOfFunc);
+                    step.SetResult(i, Step.Ng);
+                }
             }
         }
 
@@ -7482,34 +6565,13 @@ namespace HVT.VTM.Program
 
         private bool StepTestResult(Step step)
         {
+            if (Boards.Count < 1 || Boards.Count > 4) return false;
             bool isOk = true;
-            switch (Boards.Count)
+            for (int i = 0; i < Boards.Count; i++)
             {
-                case 1:
-                    if (!Boards[0].Skip) isOk = isOk && step.Result1 != Step.Ng;
-                    return isOk;
-
-                case 2:
-                    if (!Boards[0].Skip) isOk = isOk && step.Result1 != Step.Ng;
-                    if (!Boards[1].Skip) isOk = isOk && step.Result2 != Step.Ng;
-                    return isOk;
-
-                case 3:
-                    if (!Boards[0].Skip) isOk = isOk && step.Result1 != Step.Ng;
-                    if (!Boards[1].Skip) isOk = isOk && step.Result2 != Step.Ng;
-                    if (!Boards[2].Skip) isOk = isOk && step.Result3 != Step.Ng;
-                    return isOk;
-
-                case 4:
-                    if (!Boards[0].Skip) isOk = isOk && step.Result1 != Step.Ng;
-                    if (!Boards[1].Skip) isOk = isOk && step.Result2 != Step.Ng;
-                    if (!Boards[2].Skip) isOk = isOk && step.Result3 != Step.Ng;
-                    if (!Boards[3].Skip) isOk = isOk && step.Result4 != Step.Ng;
-                    return isOk;
-
-                default:
-                    return false;
+                if (!Boards[i].Skip) isOk = isOk && step.GetResult(i) != Step.Ng;
             }
+            return isOk;
         }
     }
 }

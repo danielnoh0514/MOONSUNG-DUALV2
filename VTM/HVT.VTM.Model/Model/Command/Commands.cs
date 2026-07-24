@@ -599,6 +599,27 @@ namespace HVT.VTM.Base
                           "The positive sign represents clockwise rotation (CW) \r\n" +
                           "The negative sign represents counterclockwise rotation (ACW) \r\n"
             },
+
+            new CommandDescriptions()
+            {
+            CMD = CMDs.ROT,
+            Condition1 = "Sub Command",
+            IsListCondition1 = true,
+            Condition1List = new List<string>(){ "MOVE", "ROTATE", "DEGREE", "SPEED", "ACCEL", "HOME", "STOP", "ZERO", "STATUS" },
+            Oper = "Value",
+            Description = "Control a stepper motor over the System board serial port.\r\n"+
+                          "Sub Command -> firmware command:\r\n"+
+                          " MOVE   (M) : move to absolute position (steps)\r\n"+
+                          " ROTATE (R) : rotate relative (+/- steps)\r\n"+
+                          " DEGREE (D) : rotate by degrees (+/-)\r\n"+
+                          " SPEED  (V) : set max speed (steps/s)\r\n"+
+                          " ACCEL  (A) : set acceleration\r\n"+
+                          " HOME   (H) : move to position 0\r\n"+
+                          " STOP   (S) : decelerate and stop\r\n"+
+                          " ZERO   (Z) : set current position as 0\r\n"+
+                          " STATUS (?) : query position / target\r\n"+
+                          "'Value' is used by MOVE/ROTATE/DEGREE/SPEED/ACCEL and may be +/-.\r\n"
+            },
         };
 
         public static void UpdateCommand()

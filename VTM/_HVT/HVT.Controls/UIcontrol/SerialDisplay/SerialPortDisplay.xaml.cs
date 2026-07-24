@@ -380,6 +380,50 @@ namespace HVT.Controls
             }
         }
 
+        // Sends a fully pre-built frame as-is (no GetFrame wrapping) and waits for a 6-byte ACK
+        // (0x44 0x45 .. .. .. 0x56). Used by SolenoidCard.SendCardStatus2, which builds the whole
+        // frame (prefix/len/opcode/data/checksum/suffix) itself.
+        public bool SendRawFrame(byte[] frame, int TimeOut)
+        {
+            if (Port == null || !Port.IsOpen)
+            {
+                return false;
+            }
+
+            List<byte> response = new List<byte>();
+            try
+            {
+                SerialSend();
+                Port.Write(frame, 0, frame.Length);
+                var start = DateTime.Now;
+
+                while (DateTime.Now.Subtract(start).TotalMilliseconds < TimeOut)
+                {
+                    if (Port.BytesToRead >= 6)
+                    {
+                        byte startByte = (byte)Port.ReadByte();
+                        if (startByte == SystemComunication.Prefix1)   // 0x44 'D'
+                        {
+                            var secondByte = (byte)Port.ReadByte();
+                            if (secondByte == SystemComunication.Prefix2)   // 0x45 'E'
+                            {
+                                response.Clear();
+                                response.Add(startByte);
+                                response.Add(secondByte);
+                                for (int i = 0; i < 4; i++) response.Add((byte)Port.ReadByte());
+                                return response.Count == 6 && response[5] == SystemComunication.Suffix;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public bool SendAndRead(byte[] buf, byte function, int TimeOut, out byte[] Response, bool addRange = true, int size = 0)
         {
             if (Port == null || !Port.IsOpen)

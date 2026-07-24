@@ -1001,85 +1001,78 @@ namespace Camera
 
         public async void TestImage(Mat source, string target, bool sampleImage = false, Rect stepROI = default)
         {
-            if (IsTurning && turnningState == TurnningState.wait)
+            try
             {
-                mat = source.Clone();
-                AutoCalibration();
-                turnningState = TurnningState.turning;
-                return;
-            }
-            if (IsTurning)
-            {
-                mat = source.Clone();
-                return;
-            }
-
-            if (source == null) return;
-            if (ParentCanvas == null) return;
-            double scaleX = source.Width / ParentCanvasSize.Width;
-            double scaleY = source.Height / ParentCanvasSize.Height;
-
-            Mat croppedMat;
-
-            if (sampleImage)
-            {
-                OpenCvSharp.Rect rect = new OpenCvSharp.Rect(
-                new OpenCvSharp.Point(this.Rect.X * scaleX, this.Rect.Y * scaleY),
-                new OpenCvSharp.Size(this.Rect.Width * scaleX, this.Rect.Height * scaleY));
-                croppedMat = new Mat(source, rect);
-            }
-            else
-            {
-                OpenCvSharp.Rect stepROIRect = new OpenCvSharp.Rect(
-                new OpenCvSharp.Point(stepROI.X * scaleX, stepROI.Y * scaleY),
-                new OpenCvSharp.Size(stepROI.Width * scaleX, stepROI.Height * scaleY));
-                croppedMat = new Mat(source, stepROIRect);
-            }
-
-            //    OpenCvSharp.Rect rect = new OpenCvSharp.Rect(
-            //    new OpenCvSharp.Point(this.Rect.X * scaleX, this.Rect.Y * scaleY),
-            //    new OpenCvSharp.Size(this.Rect.Width * scaleX, this.Rect.Height * scaleY));
-            //using (var croppedMat = new Mat(source, rect))
-            //{
-            //    if (!Processing)
-            //    {
-            //        //var processedBitmap = DetectString(croppedMat, (int)Threshold, Blur, out string data);
-            //        var processedBitmap = DetectStringRegion(croppedMat, (int)Threshold, out string data, target, NoiseSize);
-            //        Console.WriteLine(data);
-            //        DetectedString = data;
-            //        var cropImage = processedBitmap.ToBitmapSource();
-            //        cropImage.Freeze();
-            //        CropImageHolder.Dispatcher.Invoke(new Action(() => CropImageHolder.Source = cropImage));
-            //        CropImage = cropImage;
-            //    }
-
-            using (croppedMat)
-            {
-                if (!Processing)
+                if (IsTurning && turnningState == TurnningState.wait)
                 {
-                    //var processedBitmap = DetectString(croppedMat, (int)Threshold, Blur, out string data);
-                    var processedBitmap = DetectStringRegion(croppedMat, (int)Threshold, out string data, target, NoiseSize);
-                    // Console.WriteLine(data);
-                    DetectedString = data;
+                    mat = source.Clone();
+                    AutoCalibration();
+                    turnningState = TurnningState.turning;
+                    return;
+                }
+                if (IsTurning)
+                {
+                    mat = source.Clone();
+                    return;
+                }
 
-                    //croppedMat.Line(0, croppedMat.Height / 2, croppedMat.Width, croppedMat.Height / 2, new Scalar(255, 0, 0), 2);
-                    var cropImage = processedBitmap.ToBitmapSource();
-                    cropImage.Freeze();
-                    CropImageHolder.Dispatcher.Invoke(new Action(() => CropImageHolder.Source = cropImage));
-                    CropImage = cropImage;
+                if (source == null) return;
+                if (ParentCanvas == null) return;
+                double scaleX = source.Width / ParentCanvasSize.Width;
+                double scaleY = source.Height / ParentCanvasSize.Height;
+
+                Mat croppedMat;
+
+                if (sampleImage)
+                {
+                    OpenCvSharp.Rect rect = new OpenCvSharp.Rect(
+                    new OpenCvSharp.Point(this.Rect.X * scaleX, this.Rect.Y * scaleY),
+                    new OpenCvSharp.Size(this.Rect.Width * scaleX, this.Rect.Height * scaleY));
+                    croppedMat = new Mat(source, rect);
                 }
                 else
                 {
-                    Mat graysource = source.CvtColor(ColorConversionCodes.BGR2GRAY);
-
-                    //var cropImage = source.ToBitmapSource();
-                    var cropImage = graysource.ToBitmapSource();
-                    cropImage.Freeze();
-                    CropImageHolder.Dispatcher.Invoke(new Action(() => CropImageHolder.Source = cropImage));
-                    CropImage = cropImage;
+                    OpenCvSharp.Rect stepROIRect = new OpenCvSharp.Rect(
+                    new OpenCvSharp.Point(stepROI.X * scaleX, stepROI.Y * scaleY),
+                    new OpenCvSharp.Size(stepROI.Width * scaleX, stepROI.Height * scaleY));
+                    croppedMat = new Mat(source, stepROIRect);
                 }
-                await Task.Delay(5);
+
+             
+
+                using (croppedMat)
+                {
+                    if (!Processing)
+                    {
+                        //var processedBitmap = DetectString(croppedMat, (int)Threshold, Blur, out string data);
+                        var processedBitmap = DetectStringRegion(croppedMat, (int)Threshold, out string data, target, NoiseSize);
+                        // Console.WriteLine(data);
+                        DetectedString = data;
+
+                        //croppedMat.Line(0, croppedMat.Height / 2, croppedMat.Width, croppedMat.Height / 2, new Scalar(255, 0, 0), 2);
+                        var cropImage = processedBitmap.ToBitmapSource();
+                        cropImage.Freeze();
+                        CropImageHolder.Dispatcher.Invoke(new Action(() => CropImageHolder.Source = cropImage));
+                        CropImage = cropImage;
+                    }
+                    else
+                    {
+                        Mat graysource = source.CvtColor(ColorConversionCodes.BGR2GRAY);
+
+                        //var cropImage = source.ToBitmapSource();
+                        var cropImage = graysource.ToBitmapSource();
+                        cropImage.Freeze();
+                        CropImageHolder.Dispatcher.Invoke(new Action(() => CropImageHolder.Source = cropImage));
+                        CropImage = cropImage;
+                    }
+                    await Task.Delay(5);
+                }
             }
+            catch
+            {
+
+            }
+            
         }
 
         public async void AutoCalibration()

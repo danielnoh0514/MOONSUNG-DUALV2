@@ -97,7 +97,7 @@ namespace HVT.Controls
             {
                 Card.Chanels[item - 1].isOn = IsOn;
             }
-            return Card.SendCardStatus();
+            return Card.SendCardStatus2();
         }
     }
 }
