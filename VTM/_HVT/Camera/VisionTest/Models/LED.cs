@@ -194,7 +194,16 @@ namespace Camera
             string Value = "";
             foreach (SingleLED led in LEDs)
             {
-                var output = led.Use ? led.TestImage(mat, true) : "0";
+                string output = "0";
+                try
+                {
+                    output = led.Use ? led.TestImage(mat, true) : "0";
+                }
+                catch (Exception ex)
+                {
+                    // one bad LED must not stop the judgment of the remaining LEDs
+                    System.Diagnostics.Debug.WriteLine("LED " + led.Index + " TestImage failed: " + ex.Message);
+                }
                 Value = output.ToString() + Value;
             }
 
@@ -241,9 +250,7 @@ namespace Camera
             {
                 if (value != _x)
                 {
-                    _x = value;
-                    rect = new Rect(value, Rect.Y, Rect.Width, Rect.Height);
-                    SetPosition();
+                    Rect = new Rect(value, rect.Y, rect.Width, rect.Height);
                 }
                 OnPropertyChanged("X");
             }
@@ -258,9 +265,7 @@ namespace Camera
             {
                 if (value != _y)
                 {
-                    _y = value;
-                    rect = new Rect(Rect.X, value, Rect.Width, Rect.Height);
-                    SetPosition();
+                    Rect = new Rect(rect.X, value, rect.Width, rect.Height);
                 }
                 OnPropertyChanged("Y");
             }
@@ -275,9 +280,7 @@ namespace Camera
             {
                 if (value != _w)
                 {
-                    _w = value;
-                    Rect = new Rect(Rect.X, Rect.Y, value, Rect.Height);
-                    SetPosition();
+                    Rect = new Rect(rect.X, rect.Y, value, rect.Height);
                 }
                 OnPropertyChanged("Width");
             }
@@ -292,9 +295,7 @@ namespace Camera
             {
                 if (value != _h)
                 {
-                    _h = value;
-                    Rect = new Rect(Rect.X, Rect.Y, Rect.Width, value);
-                    SetPosition();
+                    Rect = new Rect(rect.X, rect.Y, rect.Width, value);
                 }
                 OnPropertyChanged("Height");
             }
@@ -636,25 +637,39 @@ namespace Camera
             {
                 if (rect != value)
                 {
-                    if (value.X > 0 && value.X < ParentCanvasSize.Width - value.Width)
+                    double newW = Math.Round(value.Width);
+                    double newH = Math.Round(value.Height);
+                    double newX = Math.Round(value.X);
+                    double newY = Math.Round(value.Y);
+
+                    // clamp inside the parent canvas so the LED can never be clipped half-way
+                    if (ParentCanvasSize.Width > 0)
                     {
-                        X = (int)value.X;
-                        Width = (int)value.Width;
-                        rect.X = value.X;
-                        elip.Width = value.Width;
-                        rect.Width = value.Width;
-                        Label.Width = value.Width;
+                        newX = Math.Min(Math.Max(newX, 0), Math.Max(ParentCanvasSize.Width - newW, 0));
+                    }
+                    if (ParentCanvasSize.Height > 0)
+                    {
+                        newY = Math.Min(Math.Max(newY, 0), Math.Max(ParentCanvasSize.Height - newH, 0));
                     }
 
-                    if (value.Y > 0 && value.Y < ParentCanvasSize.Height - value.Height)
-                    {
-                        Y = (int)value.Y;
-                        Height = (int)value.Height;
-                        rect.Y = value.Y;
-                        elip.Height = value.Height;
-                        rect.Height = value.Height;
-                        Label.Height = value.Height;
-                    }
+                    rect = new Rect(newX, newY, newW, newH);
+                    _x = newX;
+                    _y = newY;
+                    _w = newW;
+                    _h = newH;
+
+                    // width and height always applied together so the ellipse stays a full circle
+                    elip.Width = newW;
+                    elip.Height = newH;
+                    Label.Width = newW;
+                    Label.Height = newH;
+
+                    SetPosition();
+
+                    OnPropertyChanged(nameof(X));
+                    OnPropertyChanged(nameof(Y));
+                    OnPropertyChanged(nameof(Width));
+                    OnPropertyChanged(nameof(Height));
                 }
             }
         }
@@ -850,10 +865,11 @@ namespace Camera
                 e.Handled = true;
                 Label.Cursor = Cursors.SizeAll;
                 Keyboard.Focus(Label);
+                // keep the exact grab offset so the LED does not jump when a drag starts
                 OffsetMove = new Rect()
                 {
-                    Width = Math.Max(Math.Abs(e.GetPosition(ParentCanvas).X - rect.X), 5),
-                    Height = Math.Max(Math.Abs(e.GetPosition(ParentCanvas).Y - rect.Y), 5),
+                    Width = Math.Max(e.GetPosition(ParentCanvas).X - rect.X, 0),
+                    Height = Math.Max(e.GetPosition(ParentCanvas).Y - rect.Y, 0),
                 };
                 OnSelected();
             }
@@ -916,6 +932,10 @@ namespace Camera
                 new OpenCvSharp.Point(this.Rect.X * scaleX, this.Rect.Y * scaleY),
                 new OpenCvSharp.Size(this.Rect.Width * scaleX, this.Rect.Height * scaleY));
 
+            // an ROI outside the image throws and stops the whole sampling loop
+            rect = rect.Intersect(new OpenCvSharp.Rect(0, 0, source.Width, source.Height));
+            if (rect.Width <= 0 || rect.Height <= 0) return;
+
             using (var croppedMat = new Mat(source, rect))
             {
                 Mat gray = croppedMat.CvtColor(ColorConversionCodes.RGB2GRAY);
@@ -938,6 +958,10 @@ namespace Camera
             OpenCvSharp.Rect rect = new OpenCvSharp.Rect(
                 new OpenCvSharp.Point(this.Rect.X * scaleX, this.Rect.Y * scaleY),
                 new OpenCvSharp.Size(this.Rect.Width * scaleX, this.Rect.Height * scaleY));
+
+            // an ROI outside the image throws and stops the whole sampling loop
+            rect = rect.Intersect(new OpenCvSharp.Rect(0, 0, source.Width, source.Height));
+            if (rect.Width <= 0 || rect.Height <= 0) return "0";
 
             using (var croppedMat = new Mat(source, rect))
             {

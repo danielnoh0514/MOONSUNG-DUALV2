@@ -1701,6 +1701,32 @@ Unchecked="CheckBox_Unchecked" BorderBrush="#b6b6b6"/>
                     Content="Vistion Steps"
                     FontWeight="DemiBold"
                     Foreground="Black" />
+                <Button
+                    x:Name="btCopyVisionStep"
+                    Width="50"
+                    Height="20"
+                    Margin="0,5,60,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="#c1c1c1"
+                    Click="btCopyVisionStep_Click"
+                    Content="Copy"
+                    FontWeight="Bold"
+                    Foreground="Black"
+                    Template="{StaticResource ButtonControlNonHoverBackground}" />
+                <Button
+                    x:Name="btPasteVisionStep"
+                    Width="50"
+                    Height="20"
+                    Margin="0,5,5,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="#c1c1c1"
+                    Click="btPasteVisionStep_Click"
+                    Content="Paste"
+                    FontWeight="Bold"
+                    Foreground="Black"
+                    Template="{StaticResource ButtonControlNonHoverBackground}" />
                 <DataGrid
                     x:Name="VisionStepsGrid"
                     Margin="5,30,5,5"

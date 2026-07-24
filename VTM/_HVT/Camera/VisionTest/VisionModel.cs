@@ -152,13 +152,21 @@ namespace Camera
             {
                 foreach (var item in fnds_char)
                 {
-                    if (item.Use)
+                    try
                     {
-                        item.TestImage(mat);
+                        if (item.Use)
+                        {
+                            item.TestImage(mat);
+                        }
+                        else
+                        {
+                            item.DetectedString = string.Empty;
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        item.DetectedString = string.Empty;
+                        // one bad FND must not stop the sampling of the remaining items
+                        System.Diagnostics.Debug.WriteLine("FND TestImage failed: " + ex.Message);
                     }
                 }
             }
@@ -184,14 +192,28 @@ namespace Camera
         {
             foreach (var item in GLED)
             {
-                item.GetValue(mat);
+                try
+                {
+                    item.GetValue(mat);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("GLED GetValue failed: " + ex.Message);
+                }
             }
         }
         public void GetLEDSampleImage(Mat mat)
         {
             foreach (var item in LED)
             {
-                item.GetValue(mat);
+                try
+                {
+                    item.GetValue(mat);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("LED GetValue failed: " + ex.Message);
+                }
             }
         }
   

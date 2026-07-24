@@ -375,10 +375,13 @@ namespace VTM
 
                 case "btVisionPage":
                     btVisionPage.Background = new SolidColorBrush(Color.FromRgb(224, 224, 224));
+                    HVT.Utility.HangDiag.Checkpoint("VisionPage enter: camera SetParammeter");
                     ManualPage.camera.SetParammeter(MainProgram.EditModel.CameraSetting);
                     MainProgram.pageActive = Program.PageActive.VistionPage;
                     VisionPageHolder.Visibility = Visibility.Visible;
+                    HVT.Utility.HangDiag.Checkpoint("VisionPage enter: EnableLive");
                     VisionPage.EnableLive();
+                    HVT.Utility.HangDiag.Checkpoint("VisionPage enter: done");
                     //VisionPage.VisionStepsGrid.Items.Refresh();
                     break;
 

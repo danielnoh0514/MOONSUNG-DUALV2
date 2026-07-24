@@ -21,6 +21,13 @@ namespace VTM
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            AppDomain.CurrentDomain.UnhandledException += (s, args) => LogCrash("AppDomain", args.ExceptionObject as Exception);
+            TaskScheduler.UnobservedTaskException += (s, args) => LogCrash("Task", args.Exception);
+
+            // UI-freeze watchdog: reports the last checkpoint to CrashLogs when the UI thread hangs
+            HVT.Utility.HangDiag.Start(this.Dispatcher, Path.Combine(AppContext.BaseDirectory, "CrashLogs"));
+
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
             //initialize the splash screen and set it as the application main window
             this.MainWindow = splashScreen;
@@ -40,7 +47,9 @@ namespace VTM
                 "D8BBC1B21D13", 
                 "D843AE12EC0A" , 
                 "60CF848339D5", 
-                "60CF848339D4" , 
+                "60CF848339D4" ,
+                "D4F32D1F99D9",
+                "D6F3D1F99D8",
                 "60CF848336BE", 
                 "60CF84833ACA", 
                 "60CF848336C0" ,
@@ -80,7 +89,25 @@ namespace VTM
 
         private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            MessageBox.Show("Unhandled exception occurred: \n" + e.Exception.Message + "stacktrace" + e.Exception.StackTrace, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            LogCrash("UI", e.Exception);
+            MessageBox.Show("Unhandled exception occurred: \n" + e.Exception.Message + "\n\nStacktrace:\n" + e.Exception.StackTrace, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        public static void LogCrash(string source, Exception ex)
+        {
+            try
+            {
+                string crashLogDir = Path.Combine(AppContext.BaseDirectory, "CrashLogs");
+                Directory.CreateDirectory(crashLogDir);
+                string logFile = Path.Combine(crashLogDir, "CrashLog_" + DateTime.Now.ToString("yyyyMMdd") + ".txt");
+                string content = "[" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "] [" + source + "] "
+                    + (ex != null ? ex.ToString() : "Unknown exception") + Environment.NewLine + Environment.NewLine;
+                File.AppendAllText(logFile, content);
+            }
+            catch
+            {
+                // never let crash logging itself crash the app
+            }
         }
     }
 }

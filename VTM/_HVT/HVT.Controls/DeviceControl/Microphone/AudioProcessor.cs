@@ -31,13 +31,22 @@ namespace HVT.Controls
 
         IntPtr pythonThread;
 
+        public bool IsPythonReady { get; private set; } = false;
+
         public void InitializePython(string version)
         {
             string pythonScriptDir = Path.Combine(AppContext.BaseDirectory, "aicore");
-            string pythonHomePath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Programs\\Python\\Python{version}"; 
+            string pythonHomePath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Programs\\Python\\Python{version}";
             string[] dirs = { $"{pythonHomePath}\\DLLs", $"{pythonHomePath}\\Lib", $"{pythonHomePath}\\Lib\\site-packages", pythonScriptDir };
             var pythonPaths = string.Join(";", dirs);
             string pythonDll = Path.Combine(pythonHomePath, $"python{version}.dll");
+
+            // pythonnet throws "The type initializer for 'Delegates' threw an exception"
+            // when the python DLL does not exist - check before touching the runtime
+            if (!File.Exists(pythonDll))
+            {
+                throw new FileNotFoundException($"Python {version} runtime not found: {pythonDll}");
+            }
 
             Runtime.PythonDLL = pythonDll;
             PythonEngine.PythonHome = pythonHomePath;
@@ -57,7 +66,7 @@ namespace HVT.Controls
         }
 
         public AudioTester(string workingDir)
-        { 
+        {
 
             try
             {
@@ -66,7 +75,9 @@ namespace HVT.Controls
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                // Python not installed on this PC - audio AI test disabled, do not block startup
+                System.Diagnostics.Debug.WriteLine("Audio AI disabled: " + ex.Message);
+                return;
             }
 
             try
@@ -74,14 +85,15 @@ namespace HVT.Controls
                 LoadModules();
                 LoadModel(Path.Combine(workingDir, "model.keras"));
 
-
+                IsPythonReady = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("Audio AI model load failed. Audio test will be disabled.\n" + ex.Message,
+                    "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
-         
+
 
         }
 
@@ -106,6 +118,8 @@ namespace HVT.Controls
 
         public bool Predict(List<float> floatList)
         {
+            if (!IsPythonReady) return false;
+
             using (Py.GIL()) // Acquire the Global Interpreter Lock
             {
                 dynamic segment = np.array(floatList);

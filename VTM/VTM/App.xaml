@@ -1,7 +1,8 @@
 ﻿<Application x:Class="VTM.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:VTM">
+             xmlns:local="clr-namespace:VTM"
+             DispatcherUnhandledException="Application_DispatcherUnhandledException">
     <Application.Resources>
         <Style TargetType="{x:Type ComboBoxItem}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />

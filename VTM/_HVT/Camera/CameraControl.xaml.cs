@@ -447,25 +447,40 @@ namespace Camera
 
         public bool SetParammeter(CameraSetting cameraSetting)
         {
+            if (videoCapture == null || !videoCapture.IsOpened())
+            {
+                return false;
+            }
             if (cameraSetting != null)
             {
+                HVT.Utility.HangDiag.Checkpoint("Camera set Exposure");
                 videoCapture.Exposure = cameraSetting.Exposure;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Brightness");
                 videoCapture.Brightness = cameraSetting.Brightness;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Contrast");
                 videoCapture.Contrast = cameraSetting.Contrast;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Saturation");
                 videoCapture.Saturation = cameraSetting.Saturation;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set WhiteBalance");
                 videoCapture.WhiteBalanceBlueU = cameraSetting.WBTemperature;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Sharpness");
                 videoCapture.Sharpness = cameraSetting.Sharpness;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Focus");
                 videoCapture.Focus = cameraSetting.Focus;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Zoom");
                 videoCapture.Zoom = cameraSetting.Zoom;
 
+                HVT.Utility.HangDiag.Checkpoint("Camera set Gain");
                 videoCapture.Gain = cameraSetting.Gain;
+
+                HVT.Utility.HangDiag.Checkpoint("Camera SetParammeter done");
             }
             return true;
         }

@@ -145,12 +145,38 @@ namespace VTM
             GetLCDImageSampleTimer.Stop();
         }
 
+        private volatile bool lcdTickBusy = false;
+
         private void GetLCDImageSampleTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            this.Dispatcher.Invoke(new Action(() =>
+            // skip this tick if the previous one is still running on the UI thread,
+            // otherwise blocked Dispatcher.Invoke calls pile up and freeze the UI
+            if (lcdTickBusy) return;
+            lcdTickBusy = true;
+            try
             {
-                Program.EditModel.VisionModels.GetLCDSampleImage(Program.Capture?.LastMatFrame);
-            }));
+                this.Dispatcher.Invoke(new Action(() =>
+                {
+                    try
+                    {
+                        HVT.Utility.HangDiag.Checkpoint("VisionPage: LCD sample tick begin");
+                        Program?.EditModel?.VisionModels?.GetLCDSampleImage(Program.Capture?.LastMatFrame);
+                        HVT.Utility.HangDiag.Checkpoint("VisionPage: LCD sample tick end");
+                    }
+                    catch (Exception ex)
+                    {
+                        App.LogCrash("VisionPage.LCDTick", ex);
+                    }
+                }));
+            }
+            catch
+            {
+                // dispatcher shut down while the app is closing
+            }
+            finally
+            {
+                lcdTickBusy = false;
+            }
         }
 
         private string ReplaceCharAtIndex(string s, int index, char newChar)
@@ -166,15 +192,54 @@ namespace VTM
         }
 
 
+        private readonly HashSet<string> loggedTickErrors = new HashSet<string>();
+
+        private void LogTickErrorOnce(string source, Exception ex)
+        {
+            // the tick runs every 100ms - log only the first error per source to avoid log spam
+            if (loggedTickErrors.Add(source))
+            {
+                App.LogCrash(source, ex);
+            }
+        }
+
+        private volatile bool fndTickBusy = false;
+
         private void GetImageSampleTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
+            if (fndTickBusy) return;
+            fndTickBusy = true;
+            try
+            {
             this.Dispatcher.Invoke(new Action(() =>
             {
-                try {
+                // each sampling call isolated: an FND error must not block LED judgment
+                try
+                {
                     Program.EditModel.VisionModels.GetFNDSampleImage(Program.Capture?.LastMatFrame);
+                }
+                catch (Exception ex)
+                {
+                    LogTickErrorOnce("VisionPage.FNDSample", ex);
+                }
+                try
+                {
                     Program.EditModel.VisionModels.GetLEDSampleImage(Program.Capture?.LastMatFrame);
+                }
+                catch (Exception ex)
+                {
+                    LogTickErrorOnce("VisionPage.LEDSample", ex);
+                }
+                try
+                {
                     Program.EditModel.VisionModels.GetGLEDSampleImage(Program.Capture?.LastMatFrame);
+                }
+                catch (Exception ex)
+                {
+                    LogTickErrorOnce("VisionPage.GLEDSample", ex);
+                }
 
+                try {
                     if (tgbSelectA.IsChecked == true)
                     {
                         lbGLEDvalue.Content = Program.EditModel.VisionModels.GLED[0].CalculatorOutputString;
@@ -255,8 +320,17 @@ namespace VTM
                 {
 
                 }
-                
+
             }));
+            }
+            catch
+            {
+                // dispatcher shut down while the app is closing
+            }
+            finally
+            {
+                fndTickBusy = false;
+            }
         }
 
         private void btOpenModel_Click(object sender, RoutedEventArgs e)
@@ -479,6 +553,96 @@ namespace VTM
                 await Task.Delay(100);
             }
             Program.OnEditModelSave();
+        }
+
+        private class VisionStepClipboardData
+        {
+            public List<Camera.SingleLED> Leds = new List<Camera.SingleLED>();
+            public List<List<Camera.SingleLED>> FndSegments = new List<List<Camera.SingleLED>>();
+            public List<bool> FndUses = new List<bool>();
+            public List<Rect> LcdRects = new List<Rect>();
+        }
+
+        private VisionStepClipboardData visionStepClipboard;
+
+        private void btCopyVisionStep_Click(object sender, RoutedEventArgs e)
+        {
+            var clip = new VisionStepClipboardData();
+
+            foreach (var item in LEDsData.Items)
+            {
+                var led = item as Camera.SingleLED;
+                if (led != null && led.Use)
+                {
+                    clip.Leds.Add(led.Clone());
+                }
+            }
+
+            foreach (var FNDchar in VisionBuider.Models.FNDs)
+            {
+                var segments = new List<Camera.SingleLED>();
+                for (int index_led = 0; index_led < 7; index_led++)
+                {
+                    segments.Add(FNDchar[0].PointSegments.LEDs[index_led].Clone());
+                }
+                clip.FndSegments.Add(segments);
+                clip.FndUses.Add(FNDchar[0].Use);
+            }
+
+            foreach (var lcd in VisionBuider.Models.LCDs)
+            {
+                clip.LcdRects.Add(lcd.Rect);
+            }
+
+            visionStepClipboard = clip;
+        }
+
+        private void btPasteVisionStep_Click(object sender, RoutedEventArgs e)
+        {
+            if (visionStepClipboard == null) return;
+
+            foreach (var item in LEDsData.Items)
+            {
+                (item as Camera.SingleLED).Use = false;
+            }
+            foreach (var item in visionStepClipboard.Leds)
+            {
+                var led = LEDsData.Items[item.Index] as Camera.SingleLED;
+                led.X = item.X;
+                led.Y = item.Y;
+                led.Dir = item.Dir;
+                led.ON = item.ON;
+                led.OFF = item.OFF;
+                led.Thresh = item.Thresh;
+                led.Use = item.Use;
+            }
+
+            int index_char = 0;
+            foreach (var FNDchar in VisionBuider.Models.FNDs)
+            {
+                if (index_char >= visionStepClipboard.FndSegments.Count) break;
+
+                var segments = visionStepClipboard.FndSegments[index_char];
+                for (int index_led = 0; index_led < 7; index_led++)
+                {
+                    FNDchar[0].PointSegments.LEDs[index_led].X = segments[index_led].X;
+                    FNDchar[0].PointSegments.LEDs[index_led].Y = segments[index_led].Y;
+                    FNDchar[0].PointSegments.LEDs[index_led].Dir = segments[index_led].Dir;
+                    FNDchar[0].PointSegments.LEDs[index_led].ON = segments[index_led].ON;
+                    FNDchar[0].PointSegments.LEDs[index_led].OFF = segments[index_led].OFF;
+                    FNDchar[0].PointSegments.LEDs[index_led].Thresh = segments[index_led].Thresh;
+                    FNDchar[0].PointSegments.LEDs[index_led].Use = segments[index_led].Use;
+                }
+                FNDchar[0].Use = visionStepClipboard.FndUses[index_char];
+
+                index_char++;
+            }
+
+            var lcdList = VisionBuider.Models.LCDs;
+            for (int i = 0; i < lcdList.Count && i < visionStepClipboard.LcdRects.Count; i++)
+            {
+                lcdList[i].Rect = visionStepClipboard.LcdRects[i];
+            }
         }
 
         private void LEDsData_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)

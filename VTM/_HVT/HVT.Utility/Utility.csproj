@@ -95,6 +95,7 @@
     <Compile Include="Excel.cs" />
     <Compile Include="Extentions.cs" />
     <Compile Include="GT800_Printer.cs" />
+    <Compile Include="HangDiag.cs" />
     <Compile Include="INIF.cs" />
     <Compile Include="ModBus_Master.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

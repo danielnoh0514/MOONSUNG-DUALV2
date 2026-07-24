@@ -1193,8 +1193,10 @@ namespace Camera
                 }
             }
             Cv2.BitwiseNot(binarySource, binarySource);
+            HVT.Utility.HangDiag.Checkpoint("LCD OCR: Tesseract.Run begin (" + binarySource.Width + "x" + binarySource.Height + ")");
             tesseract.SetWhiteList(targetStr);
             tesseract.Run(binarySource, out string text, out _, out _, out _, OpenCvSharp.Text.ComponentLevels.TextLine);
+            HVT.Utility.HangDiag.Checkpoint("LCD OCR: Tesseract.Run end");
             Console.WriteLine(" Output text: {0}", text);
             detectString = text.Replace("\r", "\n").Replace("\n", "");
             return binarySource;
